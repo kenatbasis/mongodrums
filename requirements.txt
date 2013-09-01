@@ -1,0 +1,13 @@
+### install ###
+
+bunch
+pymongo>=2.5.2
+https://github.com/gregbanks/maker-py/archive/v0.1.2.zip#egg=makerpy-0.1.2
+-e git+https://github.com/gregbanks/deltaburke@master#egg=deltaburke-0.1.0
+
+### test ###
+
+mock
+nose
+ipdb
+
