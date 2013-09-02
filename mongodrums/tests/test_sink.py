@@ -42,8 +42,8 @@ class IndexProfileSinkTest(BaseTest):
         random.shuffle(sold)
         in_stock = range(1000)
         random.shuffle(in_stock)
-        stores = ['store_%d' for i in xrange(10)]
-        widgets = ['widget_%d' for i in xrange(100)]
+        stores = ['store_%d' % (i) for i in xrange(10)]
+        widgets = ['widget_%d' % (i) for i in xrange(100)]
         docs = []
         for i in xrange(len(stores)):
             for j in xrange(len(widgets)):
@@ -56,9 +56,15 @@ class IndexProfileSinkTest(BaseTest):
     def test_find_explain_logging(self):
         with instrument():
             count = self.db.foo.find({'sold': {'$gt': 100}}).count()
-        self.assertEqual(count, 899)
-        self.assertEqual(len(self._msgs), 2)
+            self.assertEqual(count, 899)
+            self.assertEqual(len(self._msgs), 2)
 
     def test_update_explain_logging(self):
-        pass
+        with instrument():
+            ret = self.db.foo.update({'store': 'store_0'},
+                                      {'$inc': {'sold': 1},
+                                       '$inc': {'in_stock': -1}},
+                                      multi=True)
+            self.assertEqual(ret['n'], 100)
+            self.assertEqual(len(self._msgs), 2)
 
