@@ -30,8 +30,8 @@ class Wrapper(object):
         self._configure(get_config())
 
     def _configure(self, config):
-        self._frequency = config.frequency
-        self._filter_packages = config.filter_packages
+        self._frequency = config.instrument.sample_frequency
+        self._filter_packages = config.instrument.filter_packages
 
     def __get__(self, owner, owner_type):
         if owner is None:
@@ -77,7 +77,11 @@ class FindWrapper(Wrapper):
     def __call__(self, self_, *args, **kwargs):
         curs = self._func(self_, *args, **kwargs)
         if random.random() < self._frequency:
-            push(curs.explain(), self.get_source())
+            push({'type': 'explain',
+                  'function': 'find',
+                  'database': self_.database.name,
+                  'explain': curs.explain(),
+                  'source': self.get_source()})
         return curs
 
     @classmethod
@@ -103,7 +107,11 @@ class UpdateWrapper(Wrapper):
     def __call__(self, self_, *args, **kwargs):
         if random.random() < self._frequency:
             curs = self_.find(args[0])
-            push(curs.explain(), self.get_source())
+            push({'type': 'explain',
+                  'function': 'update',
+                  'database': self_.database.name,
+                  'explain': curs.explain(),
+                  'source': self.get_source()})
         return self._func(self_, *args, **kwargs)
 
     @classmethod

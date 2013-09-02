@@ -2,12 +2,25 @@ from deltaburke import ConfigManager
 
 CONFIG_NAMESPACE = '__mongodrums__'
 
-ConfigManager().load({'frequency': 0.1,
-                      'filter_packages': ['pymongo'],
-                      'collector_addr': '127.0.0.1',
-                      'collector_port': 63333},
-                     False,
-                     CONFIG_NAMESPACE)
+ConfigManager().load(
+    {
+        'instrument': {
+            'sample_frequency': 0.1,
+            'filter_packages': ['pymongo']
+        },
+        'collector': {
+            'addr': '127.0.0.1',
+            'port': 63333,
+            'session': 'default'
+        },
+        'pusher': {
+            'addr': '127.0.0.1',
+            'port': 63333
+        },
+        'index_profile_sink': {
+            'mongo_uri': 'mongodb://127.0.0.1:27017/mongodrums_index_profile'
+        }
+    }, False, CONFIG_NAMESPACE)
 
 def get_config():
     """ Get the current config

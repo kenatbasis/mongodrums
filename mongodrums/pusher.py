@@ -1,3 +1,8 @@
+"""
+TODO: add dtls support
+
+"""
+
 import socket
 
 from bson.json_util import dumps
@@ -20,16 +25,15 @@ class Pusher(object):
             register_update_callback(self._configure)
 
     def _configure(self, config):
-        self._push_addr = config.collector_addr
-        self._push_port = config.collector_port
+        self._push_addr = config.pusher.addr
+        self._push_port = config.pusher.port
 
-    def push(self, explain, source):
+    def push(self, msg):
         try:
-            self._sock.sendto(dumps({'explain': explain, 'source': source}),
-                              (self._push_addr, self._push_port))
+            self._sock.sendto(dumps(msg), (self._push_addr, self._push_port))
         except Exception:
             pass
 
-def push(explain, source):
-    Pusher().push(explain, source)
+def push(msg):
+    Pusher().push(msg)
 

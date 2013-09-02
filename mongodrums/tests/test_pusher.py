@@ -15,6 +15,7 @@ class _TestCollector(threading.Thread):
         threading.Thread.__init__(self)
         self._sock = socket.socket(socket.AF_INET,
                                    socket.SOCK_DGRAM)
+        self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
         self._sock.bind(address)
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.msg = None
@@ -32,15 +33,15 @@ class PusherTest(BaseTest):
     def setUp(self):
         super(PusherTest, self).setUp()
         self._config = get_config()
-        self._collector = _TestCollector((self._config.collector_addr,
-                                          self._config.collector_port))
+        self._collector = _TestCollector((self._config.collector.addr,
+                                          self._config.collector.port))
 
     def test_push(self):
         self._collector.start()
-        args = ({'blah': {'blah': ObjectId()}}, 'blah')
-        push(*args)
+        msg = {'blah': {'blah': ObjectId()}}
+        push(msg)
         self._collector.join()
-        self.assertEqual(dumps({'explain': args[0], 'source': args[1]}),
+        self.assertEqual(dumps(msg),
                          self._collector.msg)
 
     def test_push_reconfigure(self):

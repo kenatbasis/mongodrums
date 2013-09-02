@@ -45,13 +45,13 @@ class InstrumentTest(BaseTest):
                                  FindWrapper)
 
     def test_find_push(self):
-        update_config({'frequency': 1})
+        update_config({'instrument': {'sample_frequency': 1}})
         with patch('mongodrums.instrument.push') as push_mock, \
              FindWrapper.instrument():
             doc = self.db.foo.find_one({'name': 'bob'})
             self.assertEqual(doc, {'_id': 1, 'name': 'bob'})
             self.assertEqual(push_mock.call_count, 1)
-            self.assertIn('allPlans', push_mock.call_args[0][0])
+            self.assertIn('allPlans', push_mock.call_args[0][0]['explain'])
         self.assertNotIsInstance(pymongo.collection.Collection.find,
                                  FindWrapper)
         self.assertNotIsInstance(self.db.foo.find,
@@ -60,16 +60,16 @@ class InstrumentTest(BaseTest):
     def test_config_update(self):
         with instrument():
             self.assertEqual(pymongo.collection.Collection.find._frequency,
-                             self.saved_config.frequency)
-            update_config({'frequency': 1})
+                             self.saved_config.instrument.sample_frequency)
+            update_config({'instrument': {'sample_frequency': 1}})
             self.assertEqual(pymongo.collection.Collection.find._frequency, 1)
 
     def test_get_source(self):
-        update_config({'frequency': 1})
+        update_config({'instrument': {'sample_frequency': 1}})
         with patch('mongodrums.instrument.push') as push_mock, \
              FindWrapper.instrument():
             doc = self.db.foo.find_one({'name': 'bob'})
             frame_info = inspect.getframeinfo(inspect.currentframe())
             source = '%s:%d' % (frame_info[0], frame_info[1] - 1)
-            self.assertEqual(push_mock.call_args[0][1], source)
+            self.assertEqual(push_mock.call_args[0][0]['source'], source)
 
