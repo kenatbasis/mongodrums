@@ -1,6 +1,9 @@
 from abc import ABCMeta, abstractmethod
 
+from pymongo.errors import DuplicateKeyError
+
 from .config import get_config
+from .util import sanitize_document_keys
 
 
 class Sink(object):
@@ -18,19 +21,21 @@ class Sink(object):
         pass
 
 
-class IndexProfileSink(Sink):
+class ProfileSink(Sink):
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, '_MongoClient'):
             from gevent import monkey; monkey.patch_socket()
             from pymongo import MongoClient
             cls._MongoClient = MongoClient
+        return super(ProfileSink, cls).__new__(cls, *args, **kwargs)
 
     def __init__(self):
         self._config = get_config()
         self._db = None
         self._session_col = None
-        self._index_usage_col = None
-        self._query_explain_col = None
+
+    def filter(self, data, address):
+        return data['collection'].startswith('$')
 
     @property
     def db(self):
@@ -45,31 +50,87 @@ class IndexProfileSink(Sink):
     def session_col(self):
         if self._session_col is None:
             from .collection import SessionCollection
-            col_name = SessionDocument.get_collection_name()
+            col_name = SessionCollection.get_collection_name()
             self._session_col = SessionCollection(self.db[col_name])
         return self._session_col
 
-    @property
-    def index_usage_col(self):
-        if self._index_usage_col is None:
-            from .collection import IndexUsageCollection
-            col_name = IndexUsageCollection.get_collection_name()
-            self._index_usage_col = IndexUsageCollection(self.db[col_name])
-        return self._index_usage_col
+
+class IndexProfileSink(ProfileSink):
+    def __init__(self):
+        super(IndexProfileSink, self).__init__()
+        self._index_profile_col = None
 
     @property
-    def query_explain_col(self):
-        if self._query_explain_col is None:
-            from .collection import QueryExplainCollection
-            col_name = QueryExplainCollection.get_collection_name()
-            self._query_explain_col = QueryExplainCollection(self.db[col_name])
-        return self._query_explain_col
+    def index_profile_col(self):
+        if self._index_profile_col is None:
+            from .collection import IndexProfileCollection
+            col_name = IndexProfileCollection.get_collection_name()
+            self._index_profile_col = IndexProfileCollection(self.db[col_name])
+        return self._index_profile_col
 
-    def handle(self, data, address):
-        self.query_explain_col.save({'session': data.get('session', None),
-                                     'function': data.get('function', None),
-                                     'database': data.get('database', None),
-                                     'explain': data['explain'],
-                                     'source': data['source']})
+    def send(self, data, address):
+        q = {'session': data['session'],
+             'collection': data['collection'],
+             'index': data['explain']['cursor']}
 
+        try:
+            doc = {'queries': []}
+            doc.update(q)
+            self.index_profile_col.insert(doc)
+        except DuplicateKeyError:
+            pass
+
+        q.update({'queries.query': {'$ne': data['query']}})
+        self.index_profile_col.update(
+            q,
+            {
+                '$push': {
+                    'queries': {
+                        'query': data['query'],
+                        'count': 0,
+                        'durations': []
+                    }
+                }
+            })
+
+        self.index_profile_col.update(
+            {'session': data['session'],
+             'collection': data['collection'],
+             'index': data['explain']['cursor'],
+             'queries.query': data['query']},
+            {'$inc': {'queries.$.count': 1},
+             '$set': {
+                 'queries.$.covered': data['explain']['indexOnly']
+             },
+             '$push': {
+                 'queries.$.durations': data['explain']['millis']
+            }})
+
+
+class QueryProfileSink(ProfileSink):
+    def __init__(self):
+        super(QueryProfileSink, self).__init__()
+        self._query_profile_col = None
+
+    def filter(self, data, address):
+        return data['collection'].startswith('$')
+
+    @property
+    def query_profile_col(self):
+        if self._query_profile_col is None:
+            from .collection import QueryProfileCollection
+            col_name = QueryProfileCollection.get_collection_name()
+            self._query_profile_col = QueryProfileCollection(self.db[col_name])
+        return self._query_profile_col
+
+    def send(self, data, address):
+        query_profile_doc = \
+            {'function': data['function'],
+             'database': data['database'],
+             'collection': data['collection'],
+             'session': data['session'],
+             'explain': sanitize_document_keys(data['explain']),
+             'query': data['query'],
+             'source': data['source']}
+        self.query_profile_col.save(query_profile_doc)
 

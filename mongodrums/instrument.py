@@ -11,6 +11,7 @@ from types import MethodType
 
 import pymongo
 
+from bson.json_util import dumps
 from bunch import Bunch
 
 from .config import (
@@ -80,6 +81,8 @@ class FindWrapper(Wrapper):
             push({'type': 'explain',
                   'function': 'find',
                   'database': self_.database.name,
+                  'collection': self_.name,
+                  'query': dumps(args[0], sort_keys=True),
                   'explain': curs.explain(),
                   'source': self.get_source()})
         return curs
@@ -110,6 +113,8 @@ class UpdateWrapper(Wrapper):
             push({'type': 'explain',
                   'function': 'update',
                   'database': self_.database.name,
+                  'collection': self_.name,
+                  'query': dumps(args[0], sort_keys=True),
                   'explain': curs.explain(),
                   'source': self.get_source()})
         return self._func(self_, *args, **kwargs)

@@ -1,20 +1,22 @@
+import pymongo
+
 from inflection import underscore
 from makerpy.object_collection import ObjectCollection
 
 from .bindings import bindings
 from .document import (
-    Document, SessionDocument, IndexUsageDocument, QueryExplainDocument
+    Document, SessionDocument, IndexProfileDocument, QueryProfileDocument
 )
 
 
-class IndexProfileCollection(ObjectCollection):
+class MongoDrumsCollection(ObjectCollection):
     _default_class = None
 
     def __init__(self, collection):
-        super(IndexProfileCollection, self).__init__(
-                                                collection,
-                                                self.__class__._default_class,
-                                                bindings)
+       super(MongoDrumsCollection, self).__init__(
+                                            collection,
+                                            self.__class__._default_class,
+                                            bindings)
 
     @property
     def collection_name(self):
@@ -22,7 +24,7 @@ class IndexProfileCollection(ObjectCollection):
 
     @classmethod
     def get_collection_name(cls):
-        return underscore(cls.__name__)
+        return '_'.join(underscore(cls.__name__).rsplit('_', 1)[:-1])
 
     def insert(self, document):
         if isinstance(document, Document):
@@ -32,7 +34,7 @@ class IndexProfileCollection(ObjectCollection):
     def save(self, document):
         if isinstance(document, Document):
             document = document.to_document()
-        self.save_document()
+        self.save_document(document)
 
     def remove(self, document):
         if isinstance(document, Document):
@@ -42,14 +44,19 @@ class IndexProfileCollection(ObjectCollection):
         self.remove_by_id(document['_id'])
 
 
-class SessionCollection(IndexProfileCollection):
+class SessionCollection(MongoDrumsCollection):
     pass
 
 
-class IndexUsageCollection(IndexProfileCollection):
-    pass
+class IndexProfileCollection(MongoDrumsCollection):
+    def __init__(self, collection):
+        super(IndexProfileCollection, self).__init__(collection)
+        self.collection.ensure_index([('session', pymongo.ASCENDING), 
+                                      ('collection', pymongo.ASCENDING),
+                                      ('index', pymongo.ASCENDING)],
+                                     unique=True)
 
 
-class QueryExplainCollection(IndexProfileCollection):
+class QueryProfileCollection(MongoDrumsCollection):
     pass
 

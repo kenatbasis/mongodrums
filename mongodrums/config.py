@@ -18,7 +18,10 @@ ConfigManager().load(
             'port': 63333
         },
         'index_profile_sink': {
-            'mongo_uri': 'mongodb://127.0.0.1:27017/mongodrums_index_profile'
+            'mongo_uri': 'mongodb://127.0.0.1:27017/mongodrums_profile'
+        },
+        'query_profile_sink': {
+            'mongo_uri': 'mongodb://127.0.0.1:27017/mongodrums_profile'
         }
     }, False, CONFIG_NAMESPACE)
 

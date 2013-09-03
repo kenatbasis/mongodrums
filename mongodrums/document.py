@@ -4,11 +4,11 @@ from .bindings import bindings
 class DocumentMetaclass(type):
     def __new__(cls, name, bases, attrs):
         if name not in bindings:
-            bindgins[name] = '%s.%s' % (attrs['__module__'], name)
+            bindings[name] = '%s.%s' % (attrs['__module__'], name)
         return super(DocumentMetaclass, cls).__new__(cls, name, bases, attrs)
 
 
-class Document(object):
+class BaseDocument(object):
     __metaclass__ = DocumentMetaclass
 
     def _to_document(self):
@@ -118,19 +118,39 @@ class QueryDocument(EmbeddedDocument):
         self._durations = durations
 
 
-class IndexDocument(EmbeddedDocument):
+class IndexProfileDocument(Document):
     def __init__(self):
+        super(IndexUsageDocument, self).__init__(self)
+
+        self._session = None
+        self._collection = None
         self._index = None
         self._queries = None
 
     @property
-    def index(self):
-        return self._index
+    def session(self):
+        return self._session
 
-    @index.setter
-    def index(self, index):
-        self._index = index
+    @session.setter
+    def session(self, session):
+        self._session = session
 
+    @property
+    def collection(self):
+        return self._collection
+
+    @collection.setter
+    def collection(self, collection):
+        self._collection = collection
+
+    @property
+    def indexes(self):
+        return self._indexes
+
+    @indexes.setter
+    def indexes(self, indexes):
+        self._indexes = indexes
+    
     @property
     def queries(self):
         return self._queries
@@ -146,13 +166,14 @@ class IndexDocument(EmbeddedDocument):
         return doc
 
 
-class IndexUsageDocument(Document):
+class QueryProfileDocument(Document):
     def __init__(self):
-        super(IndexUsageDocument, self).__init__(self)
-
         self._session = None
+        self._database = None
         self._collection = None
-        self._indexes = None
+        self._source = None
+        self._function = None
+        self._explain = None
 
     @property
     def session(self):
@@ -163,51 +184,20 @@ class IndexUsageDocument(Document):
         self._session = session
 
     @property
+    def database(self):
+        return self._database
+
+    @database.setter
+    def database(self, database):
+        self._database = database
+
+    @property
     def collection(self):
         return self._collection
 
     @collection.setter
-    def (self, collection):
+    def collection(self, collection):
         self._collection = collection
-
-    @property
-    def indexes(self):
-        return self._indexes
-
-    @indexes.setter
-    def indexes(self, indexes):
-        self._indexes = indexes
-
-    def to_document(self):
-        doc = self._to_document()
-        doc['indexes'] = dict([(k, v.to_document()) for k, v in
-                                doc['indexes'].iteritems()])
-        return doc
-
-
-class QueryExplainDocument(Document):
-    def __init__(self):
-        self._session = None
-        self._environment = None
-        self._source = None
-        self._function = None
-        self._explain = None
-
-    @property
-    def session(self):
-        return self._session
-
-    @session.setter
-    def (self, session):
-        self._session = session
-
-    @property
-    def environment(self):
-        return self._environment
-
-    @environment.setter
-    def (self, environment):
-        self._environment = environment
 
     @property
     def source(self):

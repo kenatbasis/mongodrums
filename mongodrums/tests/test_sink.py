@@ -4,31 +4,43 @@ import random
 import mongodrums.instrument
 
 from . import BaseTest
+from mongodrums.collection import IndexProfileCollection, QueryProfileCollection
 from mongodrums.config import get_config, update_config
 from mongodrums.instrument import instrument
-from mongodrums.sink import IndexProfileSink
+from mongodrums.sink import IndexProfileSink, QueryProfileSink
 
 
-class IndexProfileSinkTest(BaseTest):
+class ProfileSinkTest(BaseTest):
+    SINK_TEST_DB = 'mongodrums_index_profile_test'
+
     def setUp(self):
-        super(IndexProfileSinkTest, self).setUp()
+        super(ProfileSinkTest, self).setUp()
+        self.sink_db = self.client[self.__class__.SINK_TEST_DB]
         self._setup_test_collection()
-        self._sink = IndexProfileSink()
         self._real_push = mongodrums.instrument.push
         self._msgs = []
         mongodrums.instrument.push = self._push
-        self._old_sample_frequency = \
-            get_config()['instrument']['sample_frequency']
-        update_config({'instrument': {'sample_frequency': 1}})
+        update_config({
+            'instrument': {'sample_frequency': 1},
+            'index_profile_sink': {
+                'mongo_uri': 'mongodb://127.0.0.1:27017/%s' %
+                             (self.__class__.SINK_TEST_DB)
+            },
+            'query_profile_sink': {
+                'mongo_uri': 'mongodb://127.0.0.1:27017/%s' %
+                             (self.__class__.SINK_TEST_DB)
+            }
+        })
+        self._index_profile_sink = IndexProfileSink()
+        self._query_profile_sink = QueryProfileSink()
 
     def tearDown(self):
-        super(IndexProfileSinkTest, self).tearDown()
+        super(ProfileSinkTest, self).tearDown()
         mongodrums.instrument.push = self._real_push
-        update_config(
-            {'instrument':
-                {'sample_frequency': self._old_sample_frequency}})
+        self.client.drop_database(self.__class__.SINK_TEST_DB)
 
     def _push(self, msg):
+        msg['session'] = 'test'
         self._msgs.append(msg)
 
     def _setup_test_collection(self):
@@ -58,6 +70,13 @@ class IndexProfileSinkTest(BaseTest):
             count = self.db.foo.find({'sold': {'$gt': 100}}).count()
             self.assertEqual(count, 899)
             self.assertEqual(len(self._msgs), 2)
+        for msg in self._msgs:
+            self._index_profile_sink.handle(msg, ('127.0.0.1', 65535))
+            self._query_profile_sink.handle(msg, ('127.0.0.1', 65535))
+        query_profile_col = QueryProfileCollection.get_collection_name()
+        index_profile_col = IndexProfileCollection.get_collection_name()
+        self.assertEqual(self.sink_db[query_profile_col].find().count(), 1)
+        self.assertEqual(self.sink_db[index_profile_col].find().count(), 1)
 
     def test_update_explain_logging(self):
         with instrument():
@@ -67,4 +86,11 @@ class IndexProfileSinkTest(BaseTest):
                                       multi=True)
             self.assertEqual(ret['n'], 100)
             self.assertEqual(len(self._msgs), 2)
+        for msg in self._msgs:
+            self._index_profile_sink.handle(msg, ('127.0.0.1', 65535))
+            self._query_profile_sink.handle(msg, ('127.0.0.1', 65535))
+        query_profile_col = QueryProfileCollection.get_collection_name()
+        index_profile_col = IndexProfileCollection.get_collection_name()
+        self.assertEqual(self.sink_db[query_profile_col].find().count(), 2)
+        self.assertEqual(self.sink_db[index_profile_col].find().count(), 1)
 
