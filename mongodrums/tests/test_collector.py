@@ -47,11 +47,13 @@ class CollectorTest(BaseTest):
         session_collection_name = SessionCollection.get_collection_name()
         col = SessionCollection(self.db[session_collection_name])
         self._start_server()
+        time.sleep(.2)
         self.assertEqual(len(col.find({'name': config.collector.session,
                                        'start_time': {'$exists': True},
                                        'end_time': {'$exists': False}})),
                          1)
         self._stop_server()
+        time.sleep(.2)
         self.assertEqual(len(col.find({'name': config.collector.session,
                                        'start_time': {'$exists': True},
                                        'end_time': {'$exists': True}})),

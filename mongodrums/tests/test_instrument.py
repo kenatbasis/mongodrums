@@ -6,7 +6,7 @@ from mock import patch
 
 from . import BaseTest
 from mongodrums.instrument import (
-    UpdateWrapper, FindWrapper, start, stop, instrument
+    UpdateWrapper, FindWrapper, start, stop, instrument, instrumented
 )
 
 from mongodrums.config import update_config
@@ -72,4 +72,10 @@ class InstrumentTest(BaseTest):
             frame_info = inspect.getframeinfo(inspect.currentframe())
             source = '%s:%d' % (frame_info[0], frame_info[1] - 1)
             self.assertEqual(push_mock.call_args[0][0]['source'], source)
+
+    def test_instrumented(self):
+        self.assertFalse(instrumented())
+        with instrument():
+            self.assertTrue(instrumented())
+        self.assertFalse(instrumented())
 

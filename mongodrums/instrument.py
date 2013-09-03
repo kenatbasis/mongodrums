@@ -158,3 +158,6 @@ def instrument(config=None):
     finally:
         stop()
 
+def instrumented():
+    return any([isinstance(pymongo.collection.Collection.update, Wrapper),
+                isinstance(pymongo.collection.Collection.find, Wrapper)])

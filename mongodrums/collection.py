@@ -29,7 +29,7 @@ class MongoDrumsCollection(ObjectCollection):
     def insert(self, document):
         if isinstance(document, Document):
             document = document.to_document()
-        self.collection.insert(document)
+        self.collection.insert(document, safe=True)
 
     def save(self, document):
         if isinstance(document, Document):
