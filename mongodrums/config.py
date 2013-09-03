@@ -6,12 +6,13 @@ ConfigManager().load(
     {
         'instrument': {
             'sample_frequency': 0.1,
-            'filter_packages': ['pymongo']
+            'filter_packages': ['pymongo', 'mongoengine']
         },
         'collector': {
             'addr': '127.0.0.1',
             'port': 63333,
-            'session': 'default'
+            'session': None,
+            'mongo_uri': 'mongodb://127.0.0.1:27017/mongodrums_profile'
         },
         'pusher': {
             'addr': '127.0.0.1',

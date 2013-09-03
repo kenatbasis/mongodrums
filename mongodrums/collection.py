@@ -45,18 +45,25 @@ class MongoDrumsCollection(ObjectCollection):
 
 
 class SessionCollection(MongoDrumsCollection):
-    pass
+    _default_class = SessionDocument
+
+    def __init__(self, collection):
+        super(IndexProfileCollection, self).__init__(collection)
+        self.collection.ensure_index([('name', pymongo.ASCENDING)],
+                                     unique=True)
 
 
 class IndexProfileCollection(MongoDrumsCollection):
+    _default_class = IndexProfileDocument
+
     def __init__(self, collection):
         super(IndexProfileCollection, self).__init__(collection)
-        self.collection.ensure_index([('session', pymongo.ASCENDING), 
+        self.collection.ensure_index([('session', pymongo.ASCENDING),
                                       ('collection', pymongo.ASCENDING),
                                       ('index', pymongo.ASCENDING)],
                                      unique=True)
 
 
 class QueryProfileCollection(MongoDrumsCollection):
-    pass
+    _default_class = QueryProfileDocument
 

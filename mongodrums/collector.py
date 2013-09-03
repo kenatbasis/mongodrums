@@ -4,12 +4,16 @@ TODO: add dtls support
 """
 import threading
 
+from datetime import datetime
+
+import pymongo
 import gevent
 
 from bson.json_util import loads
 from gevent.server import DatagramServer
 
 from mongodrums.config import get_config
+from mongodrums.collection import SessionCollection
 
 
 class CollectorRunner(threading.Thread):
@@ -55,6 +59,12 @@ class Collector(DatagramServer):
 
     def add_sink(self, sink):
         self._sinks.append(sink)
+
+    def _run(self):
+        if self._session is not None:
+            col = SessionCollection(pymongo.MongoClient(
+                        get_config().collector.mongo_uri).session)
+            col.insert({'name': self._session, 'start_time': datetime.utcnow()})
 
     def handle(self, data, address):
         if isinstance(data, basestring):

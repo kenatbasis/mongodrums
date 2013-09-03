@@ -25,6 +25,7 @@ class CollectorTest(BaseTest):
         self._server = None
 
     def tearDown(self):
+        super(CollectorTest, self).tearDown()
         self._stop_server()
 
     def _start_server(self, sinks=None):
