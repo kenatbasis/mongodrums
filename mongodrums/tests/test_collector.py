@@ -1,49 +1,14 @@
 import socket
 import time
 import ssl
-import threading
 
 import gevent
 import mock
 
 from . import BaseTest
-from mongodrums.collector import Collector
+from mongodrums.collector import Collector, CollectorRunner
 from mongodrums.config import get_config
 from mongodrums.sink import Sink
-
-
-class _CollectorRunner(threading.Thread):
-    def __init__(self, sinks=None):
-        threading.Thread.__init__(self)
-        self.daemon = False
-        self._server = None
-        self._stop = threading.Event()
-        self._sinks = [] if sinks is None else sinks
-
-    @property
-    def server(self):
-        return self._server
-
-    def _check_stopped(self):
-        while not self._stop.is_set():
-            gevent.sleep(.1)
-        if self._server is not None:
-            self._server.stop()
-
-    def run(self):
-        config = get_config()
-        self._server = Collector((config.collector.addr,
-                                  config.collector.port))
-        for sink in self._sinks:
-            self._server.add_sink(sink)
-        stop_check = gevent.spawn(self._check_stopped)
-        try:
-            self._server.serve_forever()
-        finally:
-            stop_check.join()
-
-    def stop(self):
-        self._stop.set()
 
 
 class _BufferSink(Sink):
@@ -64,7 +29,7 @@ class CollectorTest(BaseTest):
 
     def _start_server(self, sinks=None):
         if self._server is None or not self._server.is_alive():
-            self._server = _CollectorRunner(sinks)
+            self._server = CollectorRunner(sinks)
             self._server.start()
 
     def _stop_server(self):
