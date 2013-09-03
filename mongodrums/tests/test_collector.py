@@ -4,10 +4,12 @@ import ssl
 
 import gevent
 import mock
+import pymongo
 
 from . import BaseTest
+from mongodrums.collection import SessionCollection
 from mongodrums.collector import Collector, CollectorRunner
-from mongodrums.config import get_config
+from mongodrums.config import get_config, update_config
 from mongodrums.sink import Sink
 
 
@@ -38,6 +40,23 @@ class CollectorTest(BaseTest):
             self._server.stop()
             self._server.join()
         self._server = None
+
+    def test_session_setup(self):
+        update_config({'collector': {'session': 'collector_test'}})
+        config = get_config()
+        session_collection_name = SessionCollection.get_collection_name()
+        col = SessionCollection(self.db[session_collection_name])
+        self._start_server()
+        self.assertEqual(len(col.find({'name': config.collector.session,
+                                       'start_time': {'$exists': True},
+                                       'end_time': {'$exists': False}})),
+                         1)
+        self._stop_server()
+        self.assertEqual(len(col.find({'name': config.collector.session,
+                                       'start_time': {'$exists': True},
+                                       'end_time': {'$exists': True}})),
+                         1)
+
 
     def test_handle(self):
         config = get_config()

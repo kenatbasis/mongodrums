@@ -48,7 +48,7 @@ class SessionCollection(MongoDrumsCollection):
     _default_class = SessionDocument
 
     def __init__(self, collection):
-        super(IndexProfileCollection, self).__init__(collection)
+        super(SessionCollection, self).__init__(collection)
         self.collection.ensure_index([('name', pymongo.ASCENDING)],
                                      unique=True)
 

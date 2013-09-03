@@ -42,10 +42,22 @@ class CollectorRunner(threading.Thread):
         for sink in self._sinks:
             self._server.add_sink(sink)
         stop_check = gevent.spawn(self._check_stopped)
+        session_col = None
+        if self._server.session is not None:
+            client = pymongo.MongoClient(get_config().collector.mongo_uri)
+            db = client.get_default_database()
+            session_col = SessionCollection(
+                                db[SessionCollection.get_collection_name()])
+            session_col.insert({'name': self._server.session,
+                                'start_time': datetime.utcnow()})
         try:
             self._server.serve_forever()
         finally:
             stop_check.join()
+            if session_col is not None:
+                session_col.update({'name': self._server.session},
+                                   {'$set': {'end_time': datetime.utcnow()}})
+
 
     def stop(self):
         self._stop.set()
@@ -57,14 +69,12 @@ class Collector(DatagramServer):
         self._sinks = []
         self._session = get_config().collector.session
 
+    @property
+    def session(self):
+        return self._session
+
     def add_sink(self, sink):
         self._sinks.append(sink)
-
-    def _run(self):
-        if self._session is not None:
-            col = SessionCollection(pymongo.MongoClient(
-                        get_config().collector.mongo_uri).session)
-            col.insert({'name': self._session, 'start_time': datetime.utcnow()})
 
     def handle(self, data, address):
         if isinstance(data, basestring):
