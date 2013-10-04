@@ -44,7 +44,7 @@ def configure(sources, notify=True):
     ConfigManager().load(sources, notify, CONFIG_NAMESPACE)
 
 
-def update_config(sources, notify=True):
+def update(sources, notify=True):
     """ Update pymongo instrumentation configuration
 
     :param sources:     load configuration from sources where sources can be a

@@ -9,7 +9,7 @@ from mongodrums.instrument import (
     UpdateWrapper, FindWrapper, start, stop, instrument, instrumented
 )
 
-from mongodrums.config import update_config
+from mongodrums.config import update
 
 
 class InstrumentTest(BaseTest):
@@ -45,7 +45,7 @@ class InstrumentTest(BaseTest):
                                  FindWrapper)
 
     def test_find_push(self):
-        update_config({'instrument': {'sample_frequency': 1}})
+        update({'instrument': {'sample_frequency': 1}})
         with patch('mongodrums.instrument.push') as push_mock, \
              FindWrapper.instrument():
             doc = self.db.foo.find_one({'name': 'bob'})
@@ -61,11 +61,11 @@ class InstrumentTest(BaseTest):
         with instrument():
             self.assertEqual(pymongo.collection.Collection.find._frequency,
                              self.saved_config.instrument.sample_frequency)
-            update_config({'instrument': {'sample_frequency': 1}})
+            update({'instrument': {'sample_frequency': 1}})
             self.assertEqual(pymongo.collection.Collection.find._frequency, 1)
 
     def test_get_source(self):
-        update_config({'instrument': {'sample_frequency': 1}})
+        update({'instrument': {'sample_frequency': 1}})
         with patch('mongodrums.instrument.push') as push_mock, \
              FindWrapper.instrument():
             doc = self.db.foo.find_one({'name': 'bob'})

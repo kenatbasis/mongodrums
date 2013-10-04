@@ -9,7 +9,7 @@ import pymongo
 from . import BaseTest
 from mongodrums.collection import SessionCollection
 from mongodrums.collector import Collector, CollectorRunner
-from mongodrums.config import get_config, update_config
+from mongodrums.config import get_config, update
 from mongodrums.sink import Sink
 
 
@@ -42,7 +42,7 @@ class CollectorTest(BaseTest):
         self._server = None
 
     def test_session_setup(self):
-        update_config({'collector': {'session': 'collector_test'}})
+        update({'collector': {'session': 'collector_test'}})
         config = get_config()
         session_collection_name = SessionCollection.get_collection_name()
         col = SessionCollection(self.db[session_collection_name])

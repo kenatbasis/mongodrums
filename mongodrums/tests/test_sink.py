@@ -5,7 +5,7 @@ import mongodrums.instrument
 
 from . import BaseTest
 from mongodrums.collection import IndexProfileCollection, QueryProfileCollection
-from mongodrums.config import get_config, update_config
+from mongodrums.config import get_config, update
 from mongodrums.instrument import instrument
 from mongodrums.sink import IndexProfileSink, QueryProfileSink
 
@@ -20,7 +20,7 @@ class ProfileSinkTest(BaseTest):
         self._real_push = mongodrums.instrument.push
         self._msgs = []
         mongodrums.instrument.push = self._push
-        update_config({
+        update({
             'instrument': {'sample_frequency': 1},
             'index_profile_sink': {
                 'mongo_uri': 'mongodb://127.0.0.1:27017/%s' %
