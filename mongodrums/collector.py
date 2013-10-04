@@ -12,8 +12,9 @@ import gevent
 from bson.json_util import loads
 from gevent.server import DatagramServer
 
-from mongodrums.config import get_config
-from mongodrums.collection import SessionCollection
+from .config import get_config
+from .collection import SessionCollection
+from .util import get_default_database
 
 
 class CollectorRunner(threading.Thread):
@@ -44,8 +45,9 @@ class CollectorRunner(threading.Thread):
         stop_check = gevent.spawn(self._check_stopped)
         session_col = None
         if self._server.session is not None:
-            client = pymongo.MongoClient(get_config().collector.mongo_uri)
-            db = client.get_default_database()
+            mongo_uri = get_config().collector.mongo_uri
+            client = pymongo.MongoClient(mongo_uri)
+            db = get_default_database(client, mongo_uri)
             session_col = SessionCollection(
                                 db[SessionCollection.get_collection_name()])
             session_col.insert({'name': self._server.session,

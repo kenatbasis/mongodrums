@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from pymongo.errors import DuplicateKeyError
 
 from .config import get_config
-from .util import sanitize_document_keys
+from .util import sanitize_document_keys, get_default_database
 
 
 class Sink(object):
@@ -41,9 +41,8 @@ class ProfileSink(Sink):
     def db(self):
         if self._db is None:
             mongo_uri = self._config.index_profile_sink.mongo_uri
-            self._db = \
-                self.__class__._MongoClient(
-                    mongo_uri).get_default_database()
+            client = self.__class__._MongoClient(mongo_uri)
+            self._db = get_default_database(client, mongo_uri)
         return self._db
 
     @property
