@@ -82,7 +82,8 @@ class FindWrapper(Wrapper):
                   'function': 'find',
                   'database': self_.database.name,
                   'collection': self_.name,
-                  'query': dumps(args[0], sort_keys=True),
+                  'query': dumps(args[0] if len(args) > 0 else {},
+                                 sort_keys=True),
                   'explain': curs.explain(),
                   'source': self.get_source()})
         return curs

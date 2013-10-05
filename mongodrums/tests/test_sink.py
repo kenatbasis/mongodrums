@@ -70,12 +70,15 @@ class ProfileSinkTest(BaseTest):
             count = self.db.foo.find({'sold': {'$gt': 100}}).count()
             self.assertEqual(count, 899)
             self.assertEqual(len(self._msgs), 2)
+            count = self.db.foo.find().count()
+            self.assertEqual(count, 1000)
+            self.assertEqual(len(self._msgs), 4)
         for msg in self._msgs:
             self._index_profile_sink.handle(msg, ('127.0.0.1', 65535))
             self._query_profile_sink.handle(msg, ('127.0.0.1', 65535))
         query_profile_col = QueryProfileCollection.get_collection_name()
         index_profile_col = IndexProfileCollection.get_collection_name()
-        self.assertEqual(self.sink_db[query_profile_col].find().count(), 1)
+        self.assertEqual(self.sink_db[query_profile_col].find().count(), 2)
         self.assertEqual(self.sink_db[index_profile_col].find().count(), 1)
 
     def test_update_explain_logging(self):
