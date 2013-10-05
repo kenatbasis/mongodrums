@@ -29,12 +29,14 @@ def get_version(path):
 setup(name='mongodrums',
       author='Greg Banks',
       author_email='quaid@kuatowares.com',
-      description='stylish configs',
+      description='pymongo instrumentation for hippies',
       setup_requires=['rexparse'],
       dependency_links=['https://github.com/gregbanks/rexparse/archive/master.zip#egg=rexparse'],
       rexparse={'requirements_path': get_path('requirements.txt')},
       version=get_version(get_path('mongodrums/_version.py')),
       test_suite='nose.collector',
+      scripts=[get_path('scripts/run_dex.py'),
+               get_path('scripts/run_collector.py')],
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*",
                                       "tests"]))
 
