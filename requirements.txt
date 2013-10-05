@@ -6,6 +6,7 @@ pymongo>=2.5.0
 https://github.com/surfly/gevent/archive/1.0rc3.zip#egg=gevent-1.0dev
 https://github.com/gregbanks/deltaburke/archive/master.zip#egg=deltaburke-0.1.0
 https://github.com/gregbanks/maker-py/archive/master.zip#egg=maker_py-0.1.2
+https://github.com/mongolab/dex/archive/0.6.1.zip#egg=dex-0.6.1
 
 ### test ###
 
