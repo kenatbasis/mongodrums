@@ -2,6 +2,7 @@
 TODO: add dtls support
 
 """
+import logging
 import threading
 
 from datetime import datetime
@@ -50,8 +51,12 @@ class CollectorRunner(threading.Thread):
             db = get_default_database(client, mongo_uri)
             session_col = SessionCollection(
                                 db[SessionCollection.get_collection_name()])
-            session_col.insert({'name': self._server.session,
-                                'start_time': datetime.utcnow()})
+            try:
+                session_col.insert({'name': self._server.session,
+                                    'start_time': datetime.utcnow()})
+            except pymongo.errors.DuplicateKeyError:
+                logging.warning('session %s already exists, end time will be '
+                                'updated' % (self._server.session))
         try:
             self._server.serve_forever()
         finally:
