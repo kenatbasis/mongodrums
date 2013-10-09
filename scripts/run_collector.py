@@ -11,7 +11,7 @@ import uuid
 from argparse import ArgumentParser
 
 from mongodrums.collector import CollectorRunner
-from mongodrums.config import update
+from mongodrums.config import get_config, update
 from mongodrums.sink import QueryProfileSink, IndexProfileSink
 from mongodrums.util.daemon import Daemonize
 
@@ -28,7 +28,10 @@ class Collector(Daemonize):
         logging.info('running collector...')
         update({'collector': {
                     'session': self.args.session,
-                    'mongo_uri': self.args.uri},
+                    'mongo_uri': self.args.uri,
+                    'addr': self.args.addr,
+                    'port': self.args.port
+                },
                 'index_profile_sink': {
                     'mongo_uri': self.args.uri
                  },
@@ -59,6 +62,8 @@ def signal_handler(sig_num, frame):
 
 
 def main():
+    config = get_config()
+
     parser = ArgumentParser('run collector')
 
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -81,6 +86,12 @@ def main():
         choices=['start', 'stop', 'restart', 'foreground'],
         help='control the daemon process [choices: %(choices)s; default: '
              '%(default)s]')
+    parser.add_argument(
+        '--port', default=config.collector.port, type=int, metavar='PORT',
+        help='the port to listen on [default: %(default)s]')
+    parser.add_argument(
+        '--addr', default=config.collector.addr, metavar='ADDR',
+        help='the address to listen on [default: %(default)s]')
 
     args = parser.parse_args()
 
