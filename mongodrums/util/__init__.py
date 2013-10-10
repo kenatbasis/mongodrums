@@ -1,15 +1,13 @@
 import urlparse
 
-def sanitize_document_keys(doc):
-    if isinstance(doc, dict):
-        for k in doc.keys():
-            doc[k] = sanitize_document_keys(doc[k])
-            if k.startswith('$'):
-                doc['_%s' % (k)] = doc.pop(k)
-    if isinstance(doc, list):
-        for e in doc:
-            doc = sanitize_document_keys(e)
-    return doc
+from bson.json_util import loads, dumps
+from professor.skeleton import skeleton as p_skeleton, sanitize, desanitize
+
+
+def skeleton(o):
+    if isinstance(o, basestring):
+        o = loads(o)
+    return dumps(p_skeleton(o))
 
 
 def get_default_database(client, mongo_uri):

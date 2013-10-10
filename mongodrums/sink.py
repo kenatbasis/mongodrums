@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from pymongo.errors import DuplicateKeyError
 
 from .config import get_config
-from .util import sanitize_document_keys, get_default_database
+from .util import get_default_database, sanitize, skeleton
 
 
 class Sink(object):
@@ -71,7 +71,7 @@ class IndexProfileSink(ProfileSink):
         q = {'session': data['session'],
              'collection': data['collection'],
              'index': data['explain']['cursor']}
-
+        query_skeleton = skeleton(data['query'])
         try:
             doc = {'queries': []}
             doc.update(q)
@@ -79,13 +79,13 @@ class IndexProfileSink(ProfileSink):
         except DuplicateKeyError:
             pass
 
-        q.update({'queries.query': {'$ne': data['query']}})
+        q.update({'queries.query': {'$ne': query_skeleton}})
         self.index_profile_col.update(
             q,
             {
                 '$push': {
                     'queries': {
-                        'query': data['query'],
+                        'query': query_skeleton,
                         'count': 0,
                         'durations': []
                     }
@@ -96,7 +96,7 @@ class IndexProfileSink(ProfileSink):
             {'session': data['session'],
              'collection': data['collection'],
              'index': data['explain']['cursor'],
-             'queries.query': data['query']},
+             'queries.query': query_skeleton},
             {'$inc': {'queries.$.count': 1},
              '$set': {
                  'queries.$.covered': data['explain']['indexOnly']
@@ -128,8 +128,8 @@ class QueryProfileSink(ProfileSink):
              'database': data['database'],
              'collection': data['collection'],
              'session': data['session'],
-             'explain': sanitize_document_keys(data['explain']),
-             'query': data['query'],
+             'explain': sanitize(data['explain']),
+             'query': skeleton(data['query']),
              'source': data['source']}
         self.query_profile_col.save(query_profile_doc)
 
