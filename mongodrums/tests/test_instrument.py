@@ -79,3 +79,14 @@ class InstrumentTest(BaseTest):
             self.assertTrue(instrumented())
         self.assertFalse(instrumented())
 
+    def test_explain_type_error(self):
+        docs = []
+        with patch('pymongo.cursor.Cursor.explain') as explain_mock, \
+             patch('mongodrums.instrument.push') as push_mock:
+            explain_mock.side_effect = TypeError()
+            push_mock.side_effect = docs.append
+            with instrument():
+                self.db.foo.find({'name': 'zed'})
+                self.db.foo.update({'name': 'zed'}, {'$set': {'age': 40}})
+        for doc in docs:
+            self.assertIn('error', doc['explain'])
