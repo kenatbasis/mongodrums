@@ -3,6 +3,7 @@ import random
 import socket
 import Queue
 import threading
+import traceback
 
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
@@ -78,13 +79,19 @@ class FindWrapper(Wrapper):
     def __call__(self, self_, *args, **kwargs):
         curs = self._func(self_, *args, **kwargs)
         if random.random() < self._frequency:
+            try:
+                explain = curs.explain()
+            except TypeError:
+                explain = {'error': traceback.format_exc()}
+                logging.error('error trying to run explain on curs:\n%s' %
+                              (explain['error']))
             push({'type': 'explain',
                   'function': 'find',
                   'database': self_.database.name,
                   'collection': self_.name,
                   'query': dumps(args[0] if len(args) > 0 else {},
                                  sort_keys=True),
-                  'explain': curs.explain(),
+                  'explain': explain,
                   'source': self.get_source()})
         return curs
 
@@ -111,12 +118,18 @@ class UpdateWrapper(Wrapper):
     def __call__(self, self_, *args, **kwargs):
         if random.random() < self._frequency:
             curs = self_.find(args[0])
+            try:
+                explain = curs.explain()
+            except TypeError:
+                explain = {'error': traceback.format_exc()}
+                logging.error('error trying to run explain on curs:\n%s' %
+                              (explain['error']))
             push({'type': 'explain',
                   'function': 'update',
                   'database': self_.database.name,
                   'collection': self_.name,
                   'query': dumps(args[0], sort_keys=True),
-                  'explain': curs.explain(),
+                  'explain': explain,
                   'source': self.get_source()})
         return self._func(self_, *args, **kwargs)
 
