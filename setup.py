@@ -36,7 +36,9 @@ setup(name='mongodrums',
       version=get_version(get_path('mongodrums/_version.py')),
       test_suite='nose.collector',
       scripts=[get_path('scripts/run_dex.py'),
-               get_path('scripts/run_collector.py')],
+               get_path('scripts/run_collector.py'),
+               get_path('scripts/update_indexes.py'),
+               get_path('scripts/report.py')],
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*",
                                       "tests"]))
 
