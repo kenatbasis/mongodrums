@@ -1,4 +1,4 @@
-mongo-explain
+mongodrums
 =============
 
-?
+pymongo instrumentation for hippies
