@@ -95,7 +95,7 @@ def main():
 
     args = parser.parse_args()
 
-    level = logging.INFO if args.verbose else logging.WARNING
+    level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=level)
     logger = logging.getLogger()
     logger.addHandler(
