@@ -1,4 +1,5 @@
 import argparse
+import logging
 import json
 import os
 import sys
@@ -30,10 +31,14 @@ class Report(object):
             if 'BasicCursor' in doc['index']:
                 continue
             index = doc['index'].split()[1]
-            self._current_indexes[doc['collection']][index]['query_count'] = \
-                len(doc['queries'])
-            self._current_indexes[doc['collection']][index]['used_count'] = \
-                sum([q['count'] for q in doc['queries']])
+            try:
+                self._current_indexes[doc['collection']][index]['query_count'] = \
+                    len(doc['queries'])
+                self._current_indexes[doc['collection']][index]['used_count'] = \
+                    sum([q['count'] for q in doc['queries']])
+            except KeyError:
+                logging.warning('skipping index %s on collection %s...' %
+                                (index, doc['collection']))
 
     def _print(self, str_):
         self._output_stream.write(str_ + '\n')
@@ -48,8 +53,9 @@ class Report(object):
                 if index.get('used_count', 0) == 0:
                     self._print('* used *NEVER*')
                 else:
-                    self._print('* used %d times by %d querie(s)' %
-                                (index['used_count'], index['query_count']))
+                    self._print('* used %d times by %d quer%s' %
+                                (index['used_count'], index['query_count'],
+                                 ['y', 'ies'][index['query_count'] > 0]))
             self._print('\n---\n')
 
 
@@ -78,6 +84,8 @@ def run_report(args):
 def main():
     parser = argparse.ArgumentParser('generate a report from '
                                      'instrumentation data')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='log debug output [default: %(default)s')
     parser.add_argument('-s', '--session', metavar='SESSION',
                         help='the instrumentation session to report on '
                              '[default: <all sessions>]')
@@ -94,6 +102,8 @@ def main():
                              'dump_indexes.js on the target server to '
                              'generate this file')
     args = parser.parse_args()
+
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
     run_report(args)
 

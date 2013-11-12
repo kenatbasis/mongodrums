@@ -92,5 +92,9 @@ class Collector(DatagramServer):
             except (ValueError, IndexError):
                 pass
         for sink in self._sinks:
-            sink.handle(data, address)
+            try:
+                sink.handle(data, address)
+            except Exception:
+                logging.exception('sink %s failed to handle data <%s>' %
+                                  (sink.__class__.__name__, str(data)))
 
