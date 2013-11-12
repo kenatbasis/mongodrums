@@ -84,6 +84,7 @@ class Collector(DatagramServer):
         self._sinks.append(sink)
 
     def handle(self, data, address):
+        logging.debug('processing data from %s:\n%s' % (str(address), data))
         if isinstance(data, basestring):
             try:
                 if data.strip()[0] == '{':
