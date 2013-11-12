@@ -15,6 +15,7 @@ import pymongo
 
 from bson.json_util import dumps
 from bunch import Bunch
+from pymongo.errors import OperationFailure
 
 from .config import (
     configure, get_config, register_update_callback, unregister_update_callback
@@ -82,7 +83,7 @@ class FindWrapper(Wrapper):
         if random.random() < self._frequency:
             try:
                 explain = curs.explain()
-            except TypeError:
+            except (TypeError, OperationFailure):
                 explain = {'error': traceback.format_exc()}
                 logging.error('error trying to run explain on curs:\n%s' %
                               (explain['error']))
@@ -121,7 +122,7 @@ class UpdateWrapper(Wrapper):
             curs = self_.find(args[0])
             try:
                 explain = curs.explain()
-            except TypeError:
+            except (TypeError, OperationFailure):
                 explain = {'error': traceback.format_exc()}
                 logging.error('error trying to run explain on curs:\n%s' %
                               (explain['error']))
