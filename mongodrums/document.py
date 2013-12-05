@@ -150,7 +150,7 @@ class IndexProfileDocument(Document):
     @indexes.setter
     def indexes(self, indexes):
         self._indexes = indexes
-    
+
     @property
     def queries(self):
         return self._queries

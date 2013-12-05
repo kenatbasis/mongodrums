@@ -75,7 +75,6 @@ class Wrapper(object):
         finally:
             cls.unwrap()
 
-# TODO: extract source line from stack
 
 class FindWrapper(Wrapper):
     def __call__(self, self_, *args, **kwargs):

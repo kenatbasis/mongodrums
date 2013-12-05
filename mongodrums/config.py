@@ -6,7 +6,7 @@ ConfigManager().load(
     {
         'instrument': {
             'sample_frequency': 0.1,
-            'filter_packages': ['pymongo', 'mongoengine']
+            'filter_packages': ['pymongo', 'mongoengine', 'mongodrums']
         },
         'collector': {
             'addr': '127.0.0.1',

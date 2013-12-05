@@ -43,6 +43,11 @@ class MongoDrumsCollection(ObjectCollection):
             raise ValueError('document has no id')
         self.remove_by_id(document['_id'])
 
+    def resolve_datum_descriptor(self, desc):
+        datum = super(MongoDrumsCollection,
+                      self).resolve_datum_descriptor(desc)
+        return datum if datum is not None else desc.as_doc()
+
 
 class SessionCollection(MongoDrumsCollection):
     _default_class = SessionDocument
