@@ -36,3 +36,9 @@ nosetests.xml
 
 # vim
 *.swp
+
+# virtualenv
+env/
+
+# autoenv
+.env
