@@ -94,7 +94,7 @@ class Report(object):
 
             except KeyError:
                 logging.warning('skipping index %s on collection %s:\n%s' %
-                                (index, doc['collection'],
+                                (index_name, doc['collection'],
                                  traceback.format_exc()))
 
     def _print(self, str_):
